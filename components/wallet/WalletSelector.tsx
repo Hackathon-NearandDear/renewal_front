@@ -44,14 +44,10 @@ export function WalletSelector() {
 
       setIsLoading(true);
       try {
-        console.log("Checking user existence for address:", address);
         const userExists = await fetchUserExists(address);
-        console.log("User exists:", userExists);
 
         if (userExists) {
-          console.log("Fetching user data for address:", address);
           const userInfo = await fetchUser(address);
-          console.log("Fetched user info:", userInfo);
 
           if (userInfo) {
             setUser(userInfo as User);
@@ -67,7 +63,6 @@ export function WalletSelector() {
             interest: "",
           };
           setUser(newUser);
-          console.log("Created new user object:", newUser);
         }
         return false;
       } catch (error) {
@@ -82,56 +77,20 @@ export function WalletSelector() {
         setIsLoading(false);
       }
     },
-    [setUser, toast]
+    [setUser, toast],
   );
 
   useEffect(() => {
-    const initWallet = async () => {
-      if (wallet) {
-        console.log("Initializing wallet...");
-        const accountId = await checkWalletConnection();
-        console.log("Got account ID:", accountId);
-
-        if (accountId) {
-          setUserWallet(accountId);
-          await fetchUserData(accountId);
-        }
+    const initializeUserData = async () => {
+      if (signedAccountId) {
+        console.log("signedAccountId detected:", signedAccountId);
+        setUserWallet(signedAccountId);
+        await fetchUserData(signedAccountId);
       }
     };
 
-    initWallet();
-  }, [wallet, checkWalletConnection, fetchUserData, setUserWallet]);
-
-  const handleConnectedButtonClick = useCallback(async () => {
-    if (!wallet || !signedAccountId) return;
-
-    setIsLoading(true);
-    try {
-      const exists = await fetchUserExists(signedAccountId);
-      if (exists) {
-        router.push("/explore");
-      } else {
-        const newUser: User = {
-          user_address: signedAccountId,
-          nickname: "",
-          profile_image_url: "",
-          gender: "",
-          country: "",
-          interest: "",
-        };
-        setUser(newUser);
-        router.push("/setprofile");
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to check user profile. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [signedAccountId, wallet, router, toast, setUser]);
+    initializeUserData();
+  }, [signedAccountId, setUserWallet, fetchUserData]);
 
   const handleSignIn = async () => {
     if (wallet) {
@@ -159,7 +118,6 @@ export function WalletSelector() {
 
   return signedAccountId ? (
     <button
-      onClick={handleConnectedButtonClick}
       disabled={isLoading}
       className="w-full bg-[#1F222A] font-semibold py-4 px-6 border border-primary-900 rounded-full mb-8 hover:bg-opacity-70 transition duration-300 ease-in-out flex items-center justify-between"
     >
