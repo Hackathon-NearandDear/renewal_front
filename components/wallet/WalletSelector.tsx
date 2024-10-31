@@ -82,25 +82,19 @@ export function WalletSelector() {
         setIsLoading(false);
       }
     },
-    [setUser, toast]
+    [setUser, toast],
   );
 
   useEffect(() => {
     const initWallet = async () => {
-      if (wallet) {
-        console.log("Initializing wallet...");
-        const accountId = await checkWalletConnection();
-        console.log("Got account ID:", accountId);
-
-        if (accountId) {
-          setUserWallet(accountId);
-          await fetchUserData(accountId);
+      if (wallet && signedAccountId) {
+          setUserWallet(signedAccountId);
+          await fetchUserData(signedAccountId);
         }
-      }
     };
 
     initWallet();
-  }, [wallet, checkWalletConnection, fetchUserData, setUserWallet]);
+  }, [wallet, fetchUserData, setUserWallet, signedAccountId]);
 
   const handleConnectedButtonClick = useCallback(async () => {
     if (!wallet || !signedAccountId) return;
