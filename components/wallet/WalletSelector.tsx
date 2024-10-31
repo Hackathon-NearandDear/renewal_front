@@ -19,6 +19,7 @@ export function WalletSelector() {
 
     try {
       const walletSelector = await wallet.selector;
+      console.log(walletSelector);
       const isSignedIn = walletSelector.isSignedIn();
 
       if (isSignedIn) {
@@ -84,7 +85,6 @@ export function WalletSelector() {
     },
     [setUser, toast]
   );
-
   useEffect(() => {
     const initWallet = async () => {
       if (wallet) {
@@ -94,6 +94,7 @@ export function WalletSelector() {
 
         if (accountId) {
           setUserWallet(accountId);
+          console.log(accountId);
           await fetchUserData(accountId);
         }
       }
@@ -104,7 +105,6 @@ export function WalletSelector() {
 
   const handleConnectedButtonClick = useCallback(async () => {
     if (!wallet || !signedAccountId) return;
-
     setIsLoading(true);
     try {
       const exists = await fetchUserExists(signedAccountId);

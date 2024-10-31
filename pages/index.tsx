@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Logo from "@/assets/apptos.svg";
+import Logo from "@/assets/nearanddear.svg";
 import { useUserStore } from "@/store/userStore";
 import { useEffect, useState } from "react";
 import { WalletSelector } from "@/components/wallet/WalletSelector";
@@ -21,15 +21,15 @@ export default function Landing() {
   return (
     <div className="h-screen flex items-center justify-center">
       <div className="max-w-[600px] w-full mx-auto px-6">
-        <Logo className="mx-auto" />
+        <Logo className="mx-auto mb-4" />
         <div className="w-full flex flex-col items-center mb-12">
           <div className="font-semibold text-4xl pb-3">Welcome to</div>
           <div className="font-semibold text-4xl pb-4 text-primary-900">
             Near N Dear 👋
           </div>
-          {/* <div className="text-primary-900 text-center">
-            Share, Socialize, Satisfy your needs
-          </div> */}
+          <div className="text-primary-900 text-center">
+            Looking for your near and dear mate?
+          </div>
         </div>
         <Link
           href="https://blockblock.gitbook.io/nearanddear/"
