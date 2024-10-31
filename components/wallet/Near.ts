@@ -19,7 +19,7 @@ import { setupEthereumWallets } from "@near-wallet-selector/ethereum-wallets";
 
 const THIRTY_TGAS = "30000000000000";
 const NO_DEPOSIT = "0";
-
+export const CONTRACT_ADDRESS = "";
 export class Wallet {
   /**
    * @constructor
@@ -227,6 +227,6 @@ export class Wallet {
 
 /** @type {import ('react').Context<NearContext>} */
 export const NearContext = createContext({
-  wallet: undefined,
+  wallet: undefined as Wallet | undefined,
   signedAccountId: "",
 });

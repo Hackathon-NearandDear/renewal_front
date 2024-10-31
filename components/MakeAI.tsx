@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Plus } from "lucide-react";
 import AIFormField from "@/components/AIFormField";
 import { useAIModel } from "@/utils/hooks/useAIModel";
 import { useUserStore } from "@/store/userStore";
-import { useAptosCall } from "@/utils/hooks/useAptos";
 import { sanitizeAIName, limitContentLength } from "@/utils/lib/makeai";
+import { NearContext, CONTRACT_ADDRESS } from "./wallet/Near";
 
 type CategoryKey =
   | "education"
@@ -29,11 +29,12 @@ const CreateCustomAISheet: React.FC<CreateCustomAISheetProps> = ({
   const [nameTooLong, setNameTooLong] = useState(false);
   const { aiData, setAIData, handleCreate } = useAIModel();
   const { user } = useUserStore();
-  const { executeTransaction, viewTransaction} = useAptosCall();
   const [loading, setLoading] = useState(false);
 
+  const { signedAccountId, wallet } = useContext(NearContext);
+
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
 
@@ -73,27 +74,35 @@ const CreateCustomAISheet: React.FC<CreateCustomAISheetProps> = ({
   const handleCreateAI = async () => {
     if (isFormValid) {
       setLoading(true);
-      const ai_id = user?.user_address + "_" + aiData.name
-      const isAIAlreadyRegisterInBlockchain = await viewTransaction("contain_ai", [user?.user_address, ai_id])
-      const res: any = (async ()=>{
+      const ai_id = user?.user_address + "_" + aiData.name;
+
+      const isAIAlreadyRegisterInBlockchain = await wallet?.viewMethod({
+        contractId: CONTRACT_ADDRESS,
+        method: "contain_ai",
+        args: { address: signedAccountId, ai_id: ai_id },
+      });
+
+      const res: any = (async () => {
         if (isAIAlreadyRegisterInBlockchain) {
-          const res: any = await executeTransaction("update_ai", [
-            ai_id ,
-            aiData.rag_contents,
-          ]);
-          console.log("res1",res)
+          const res: any = await wallet?.callMethod({
+            contractId: CONTRACT_ADDRESS,
+            method: "update_ai",
+            args: { ai_id: ai_id, data: aiData.rag_contents },
+          });
+          console.log("res1", res);
           return res;
         } else {
-          const res: any = await executeTransaction("register_ai", [
-            ai_id ,
-            aiData.rag_contents,
-          ]);
-          console.log("res1",res)
+          const res: any = await wallet?.callMethod({
+            contractId: CONTRACT_ADDRESS,
+            method: "register_ai",
+            args: { ai_id: ai_id, data: aiData.rag_contents },
+          });
+          console.log("res1", res);
           return res;
         }
-      })()
+      })();
 
-      const result = await res
+      const result = await res;
       if (result) {
         const createData = {
           ...aiData,

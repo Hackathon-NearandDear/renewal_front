@@ -1,4 +1,4 @@
 export function txScanURL(txHash: string) {
-  const baseUrl = "https://aptoscan.com/transaction/";
+  const baseUrl = "https://legacy.explorer.near.org/";
   return baseUrl + txHash + "?network=testnet";
 }

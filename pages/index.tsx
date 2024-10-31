@@ -32,7 +32,7 @@ export default function Landing() {
           </div> */}
         </div>
         <Link
-          href="https://blockblock.gitbook.io/aptos/"
+          href="https://blockblock.gitbook.io/nearanddear/"
           target="_blank"
           className="w-full mb-6 bg-primary-900 text-white font-semibold py-4 rounded-full shadow-md hover:bg-primary-100 transition duration-300 ease-in-out flex items-center justify-center"
         >

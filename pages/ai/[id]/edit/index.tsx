@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { Plus } from "lucide-react";
 import { useAIModel } from "@/utils/hooks/useAIModel";
 import AIFormField from "@/components/AIFormField";
 import { useUserStore } from "@/store/userStore";
-import { useAptosCall } from "@/utils/hooks/useAptos";
 import { sanitizeAIName, limitContentLength } from "@/utils/lib/makeai";
-
+import { CONTRACT_ADDRESS, NearContext } from "@/components/wallet/Near";
 type CategoryKey =
   | "education"
   | "health & fitness"
@@ -21,7 +20,7 @@ const EditAIPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useUserStore();
-  const { executeTransaction } = useAptosCall();
+  const { signedAccountId, wallet } = useContext(NearContext);
 
   const { aiData, setAIData, loadAIData, handleUpdate, error } = useAIModel(
     id as string
@@ -68,10 +67,14 @@ const EditAIPage = () => {
 
   const handleUpdateAI = async () => {
     setLoading(true);
-    const res: any = await executeTransaction("store_rag_data", [
-      user?.user_address + "_" + aiData.name,
-      aiData.rag_contents,
-    ]);
+    const res: any = await wallet?.callMethod({
+      contractId: CONTRACT_ADDRESS,
+      method: "store_rag_data",
+      args: {
+        ai_id: user?.user_address + "_" + aiData.name,
+        data: aiData.rag_contents,
+      },
+    });
 
     if (res) {
       const createData = {

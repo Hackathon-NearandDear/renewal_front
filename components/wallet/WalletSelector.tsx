@@ -25,12 +25,11 @@ import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/router";
 import { fetchUser, fetchUserExists } from "@/utils/api/user";
 import { User } from "@/utils/interface";
-import { NearContext } from "./Near";
+import { CONTRACT_ADDRESS, NearContext } from "./Near";
 
 export function WalletSelector() {
   const { signedAccountId, wallet } = useContext(NearContext);
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { setUser, setUserWallet, user } = useUserStore();
   const router = useRouter();
 
@@ -44,10 +43,10 @@ export function WalletSelector() {
       const checkAndSetUser = async (address: string) => {
         try {
           const userExists = await fetchUserExists(address);
-          //   const isUserExistInBlockchain = await viewTransaction(
-          //     "exists_creator_at",
-          //     [address]
-          //   );
+          // const isUserExistInBlockchain = await wallet.viewMethod({
+          //   contractId: CONTRACT_ADDRESS,
+          //   method: "exists_creator_at",
+          // });
 
           if (userExists) {
             const userInfo = await fetchUser(address);
@@ -86,10 +85,10 @@ export function WalletSelector() {
     if (!wallet) return;
     try {
       const userExists = await fetchUserExists(signedAccountId);
-      //   const isUserExistInBlockchain = await viewTransaction(
-      //     "exists_creator_at",
-      //     [account.address]
-      //   );
+      // const isUserExistInBlockchain = await wallet.viewMethod({
+      //   contractId: CONTRACT_ADDRESS,
+      //   method: "exists_creator_at",
+      // });
       if (userExists) {
         router.push("/explore");
       } else {
@@ -120,7 +119,7 @@ export function WalletSelector() {
     <button
       className="w-full bg-[#1F222A] font-semibold py-4 border rounded-full mb-8 hover:bg-opacity-70 transition duration-300 ease-in-out flex items-center justify-center"
       onClick={() => {
-        wallet.signIn();
+        wallet?.signIn();
         console.log(1);
       }}
     >
