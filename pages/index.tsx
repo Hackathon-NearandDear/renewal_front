@@ -1,25 +1,22 @@
 import Link from "next/link";
 import Logo from "@/assets/apptos.svg";
-import { WalletSelector } from "@/components/wallet/WalletSelector";
 import { useUserStore } from "@/store/userStore";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useEffect, useState } from "react";
-
+import { WalletSelector } from "@/components/wallet/WalletSelector";
 export default function Landing() {
   const { clearUser } = useUserStore();
-  const { disconnect } = useWallet();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     if (!isInitialized) {
       // Clear user data and disconnect wallet only on initial render
       clearUser();
-      disconnect();
+      // disconnect();
       localStorage.clear();
 
       setIsInitialized(true);
     }
-  }, [clearUser, disconnect, isInitialized]);
+  }, [clearUser, isInitialized]);
 
   return (
     <div className="h-screen flex items-center justify-center">
@@ -28,11 +25,11 @@ export default function Landing() {
         <div className="w-full flex flex-col items-center mb-12">
           <div className="font-semibold text-4xl pb-3">Welcome to</div>
           <div className="font-semibold text-4xl pb-4 text-primary-900">
-            AppToS 👋
+            Near N Dear 👋
           </div>
-          <div className="text-primary-900 text-center">
+          {/* <div className="text-primary-900 text-center">
             Share, Socialize, Satisfy your needs
-          </div>
+          </div> */}
         </div>
         <Link
           href="https://blockblock.gitbook.io/aptos/"
@@ -52,10 +49,10 @@ export default function Landing() {
             If you haven&apos;t received the faucet yet, <br /> please visit our
             website after receiving it. <br />
             <a
-              href="https://www.aptosfaucet.com/"
+              href="https://near-faucet.io/"
               className="w-full m-auto text-center font-bold leading-4"
             >
-              https://www.aptosfaucet.com
+              https://near-faucet.io/
             </a>
           </div>
         </div>

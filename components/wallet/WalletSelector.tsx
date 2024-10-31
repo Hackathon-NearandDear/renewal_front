@@ -1,24 +1,10 @@
 import {
-  APTOS_CONNECT_ACCOUNT_URL,
-  AboutAptosConnect,
-  AboutAptosConnectEducationScreen,
-  AnyAptosWallet,
-  AptosPrivacyPolicy,
-  WalletItem,
-  WalletSortingOptions,
-  groupAndSortWallets,
-  isAptosConnectWallet,
-  isInstallRequired,
-  truncateAddress,
-  useWallet,
-} from "@aptos-labs/wallet-adapter-react";
-import {
   ArrowLeft,
   ArrowRight,
   ChevronDown,
   ArrowRightIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -39,51 +25,31 @@ import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/router";
 import { fetchUser, fetchUserExists } from "@/utils/api/user";
 import { User } from "@/utils/interface";
-import { useAptosCall } from "@/utils/hooks/useAptos";
+import { NearContext } from "./Near";
 
-export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
-  const { account, connected, disconnect, wallet } = useWallet();
+export function WalletSelector() {
+  const { signedAccountId, wallet } = useContext(NearContext);
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { setUser, setUserWallet, user } = useUserStore();
   const router = useRouter();
 
-  const closeDialog = useCallback(() => setIsDialogOpen(false), []);
-  const { viewTransaction } = useAptosCall();
-
-  // const copyAddress = useCallback(async () => {
-  //   if (!account?.address) return;
-  //   try {
-  //     await navigator.clipboard.writeText(account.address);
-  //     toast({
-  //       title: "Success",
-  //       description: "Copied wallet address to clipboard.",
-  //     });
-  //   } catch {
-  //     toast({
-  //       variant: "destructive",
-  //       title: "Error",
-  //       description: "Failed to copy wallet address.",
-  //     });
-  //   }
-  // }, [account?.address, toast]);
-
   useEffect(() => {
-    if (connected && account?.address) {
+    if (wallet) {
       console.log("Wallet connected");
-      console.log("Current wallet: ", account);
+      console.log("Current wallet: ", signedAccountId);
 
-      setUserWallet(account);
+      setUserWallet(signedAccountId);
 
       const checkAndSetUser = async (address: string) => {
         try {
           const userExists = await fetchUserExists(address);
-          const isUserExistInBlockchain = await viewTransaction(
-            "exists_creator_at",
-            [address],
-          );
+          //   const isUserExistInBlockchain = await viewTransaction(
+          //     "exists_creator_at",
+          //     [address]
+          //   );
 
-          if (userExists && isUserExistInBlockchain) {
+          if (userExists) {
             const userInfo = await fetchUser(address);
             const requiredProps: (keyof User)[] = [
               "user_address",
@@ -94,12 +60,12 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
               "interest",
             ];
             const missingProps = requiredProps.filter(
-              (prop) => !(prop in userInfo),
+              (prop) => !(prop in userInfo)
             );
 
             if (missingProps.length > 0) {
               console.warn(
-                `Missing user properties: ${missingProps.join(", ")}`,
+                `Missing user properties: ${missingProps.join(", ")}`
               );
             }
 
@@ -110,21 +76,21 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
         }
       };
 
-      checkAndSetUser(account.address);
+      checkAndSetUser(signedAccountId);
     } else {
       console.log("Wallet disconnected");
     }
-  }, [connected, account, setUserWallet, setUser]);
+  }, [signedAccountId, wallet, setUserWallet, setUser]);
 
   const handleConnectedButtonClick = useCallback(async () => {
-    if (!account?.address) return;
+    if (!wallet) return;
     try {
-      const userExists = await fetchUserExists(account.address);
-      const isUserExistInBlockchain = await viewTransaction(
-        "exists_creator_at",
-        [account.address],
-      );
-      if (userExists && isUserExistInBlockchain) {
+      const userExists = await fetchUserExists(signedAccountId);
+      //   const isUserExistInBlockchain = await viewTransaction(
+      //     "exists_creator_at",
+      //     [account.address]
+      //   );
+      if (userExists) {
         router.push("/explore");
       } else {
         router.push("/setprofile");
@@ -137,215 +103,28 @@ export function WalletSelector(walletSortingOptions: WalletSortingOptions) {
         description: "Failed to check user profile. Please try again.",
       });
     }
-  }, [account?.address, router, toast]);
+  }, [signedAccountId, router, toast]);
 
-  return connected ? (
+  return signedAccountId ? (
     <button
       onClick={handleConnectedButtonClick}
       className="w-full bg-[#1F222A] font-semibold py-4 px-6 border border-primary-900 rounded-full mb-8 hover:bg-opacity-70 transition duration-300 ease-in-out flex items-center justify-between"
     >
       <div className="flex-grow" />
-      <span className="text-center">
-        {account?.ansName || truncateAddress(account?.address)}
-      </span>
+      <span className="text-center">{signedAccountId}</span>
       <div className="flex-grow flex justify-end">
         <ArrowRightIcon className="size-5" />
       </div>
     </button>
   ) : (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <button className="w-full bg-[#1F222A] font-semibold py-4 border rounded-full mb-8 hover:bg-opacity-70 transition duration-300 ease-in-out flex items-center justify-center">
-          <div className="flex items-center justify-center w-full">
-            <Image
-              src={google}
-              alt="google"
-              width={24}
-              height={24}
-              className="mr-4"
-            />
-            Continue with Google
-          </div>
-        </button>
-      </DialogTrigger>
-      <ConnectWalletDialog close={closeDialog} {...walletSortingOptions} />
-    </Dialog>
-  );
-}
-
-interface ConnectWalletDialogProps extends WalletSortingOptions {
-  close: () => void;
-}
-
-function ConnectWalletDialog({
-  close,
-  ...walletSortingOptions
-}: ConnectWalletDialogProps) {
-  const { wallets = [] } = useWallet();
-
-  const { aptosConnectWallets, availableWallets, installableWallets } =
-    groupAndSortWallets(wallets, walletSortingOptions);
-
-  const hasAptosConnectWallets = !!aptosConnectWallets.length;
-
-  return (
-    <DialogContent className="max-h-screen overflow-auto">
-      <AboutAptosConnect renderEducationScreen={renderEducationScreen}>
-        <DialogHeader>
-          <DialogTitle className="flex flex-col text-center leading-snug">
-            {hasAptosConnectWallets ? (
-              <>
-                <span>Log in or sign up</span>
-                <span>with Social + Aptos Connect</span>
-              </>
-            ) : (
-              "Connect Wallet"
-            )}
-          </DialogTitle>
-        </DialogHeader>
-
-        {hasAptosConnectWallets && (
-          <div className="flex flex-col gap-2 pt-3">
-            {aptosConnectWallets.map((wallet) => (
-              <AptosConnectWalletRow
-                key={wallet.name}
-                wallet={wallet}
-                onConnect={close}
-              />
-            ))}
-            <p className="flex gap-1 justify-center items-center text-muted-foreground text-sm">
-              Learn more about{" "}
-              <AboutAptosConnect.Trigger className="flex gap-1 py-3 items-center text-foreground">
-                Aptos Connect <ArrowRight size={16} />
-              </AboutAptosConnect.Trigger>
-            </p>
-            <AptosPrivacyPolicy className="flex flex-col items-center py-1">
-              <p className="text-xs leading-5">
-                <AptosPrivacyPolicy.Disclaimer />{" "}
-                <AptosPrivacyPolicy.Link className="text-muted-foreground underline underline-offset-4" />
-                <span className="text-muted-foreground">.</span>
-              </p>
-              <AptosPrivacyPolicy.PoweredBy className="flex gap-1.5 items-center text-xs leading-5 text-muted-foreground" />
-            </AptosPrivacyPolicy>
-            <div className="flex items-center gap-3 pt-4 text-muted-foreground">
-              <div className="h-px w-full bg-secondary" />
-              Or
-              <div className="h-px w-full bg-secondary" />
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3 pt-3">
-          {availableWallets.map((wallet) => (
-            <WalletRow key={wallet.name} wallet={wallet} onConnect={close} />
-          ))}
-          {!!installableWallets.length && (
-            <Collapsible className="flex flex-col gap-3">
-              <CollapsibleContent className="flex flex-col gap-3">
-                {installableWallets.map((wallet) => (
-                  <WalletRow
-                    key={wallet.name}
-                    wallet={wallet}
-                    onConnect={close}
-                  />
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-        </div>
-      </AboutAptosConnect>
-    </DialogContent>
-  );
-}
-
-interface WalletRowProps {
-  wallet: AnyAptosWallet;
-  onConnect?: () => void;
-}
-
-function WalletRow({ wallet, onConnect }: WalletRowProps) {
-  return (
-    <WalletItem
-      wallet={wallet}
-      onConnect={onConnect}
-      className="flex items-center justify-between px-4 py-3 gap-4 border rounded-md"
+    <button
+      className="w-full bg-[#1F222A] font-semibold py-4 border rounded-full mb-8 hover:bg-opacity-70 transition duration-300 ease-in-out flex items-center justify-center"
+      onClick={() => {
+        wallet.signIn();
+        console.log(1);
+      }}
     >
-      <div className="flex items-center gap-4">
-        <WalletItem.Icon className="h-6 w-6" />
-        <WalletItem.Name className="text-base font-normal" />
-      </div>
-      {isInstallRequired(wallet) ? (
-        <Button size="sm" variant="ghost" asChild>
-          <WalletItem.InstallLink />
-        </Button>
-      ) : (
-        <WalletItem.ConnectButton asChild>
-          <Button size="sm">Connect</Button>
-        </WalletItem.ConnectButton>
-      )}
-    </WalletItem>
-  );
-}
-
-function AptosConnectWalletRow({ wallet, onConnect }: WalletRowProps) {
-  return (
-    <WalletItem wallet={wallet} onConnect={onConnect}>
-      <WalletItem.ConnectButton asChild>
-        <Button size="lg" variant="outline" className="w-full gap-4">
-          <WalletItem.Icon className="h-5 w-5" />
-          <WalletItem.Name className="text-base font-normal" />
-        </Button>
-      </WalletItem.ConnectButton>
-    </WalletItem>
-  );
-}
-
-function renderEducationScreen(screen: AboutAptosConnectEducationScreen) {
-  return (
-    <>
-      <DialogHeader className="grid grid-cols-[1fr_4fr_1fr] items-center space-y-0">
-        <Button variant="ghost" size="icon" onClick={screen.cancel}>
-          <ArrowLeft />
-        </Button>
-        <DialogTitle className="leading-snug text-base text-center">
-          About Aptos Connect
-        </DialogTitle>
-      </DialogHeader>
-
-      <div className="flex h-[162px] pb-3 items-end justify-center">
-        <screen.Graphic />
-      </div>
-      <div className="flex flex-col gap-2 text-center pb-4">
-        <screen.Title className="text-xl" />
-        <screen.Description className="text-sm text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a]:text-foreground" />
-      </div>
-
-      <div className="grid grid-cols-3 items-center">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={screen.back}
-          className="justify-self-start"
-        >
-          Back
-        </Button>
-        <div className="flex items-center gap-2 place-self-center">
-          {screen.screenIndicators.map((ScreenIndicator, i) => (
-            <ScreenIndicator key={i} className="py-4">
-              <div className="h-0.5 w-6 transition-colors bg-muted [[data-active]>&]:bg-foreground" />
-            </ScreenIndicator>
-          ))}
-        </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={screen.next}
-          className="gap-2 justify-self-end"
-        >
-          {screen.screenIndex === screen.totalScreens - 1 ? "Finish" : "Next"}
-          <ArrowRight size={16} />
-        </Button>
-      </div>
-    </>
+      <div className="flex items-center justify-center w-full">Log in</div>
+    </button>
   );
 }

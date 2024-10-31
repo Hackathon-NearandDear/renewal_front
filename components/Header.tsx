@@ -4,8 +4,8 @@ import { User, Menu } from "lucide-react";
 import { HeaderBarProps } from "@/utils/interface";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { useWallet, } from "@aptos-labs/wallet-adapter-react";
+import { useContext, useEffect, useState } from "react";
+import { NearContext } from "./wallet/Near";
 
 interface ExtendedHeaderBarProps extends HeaderBarProps {
   onToggleSidebar?: () => void;
@@ -18,12 +18,12 @@ const Header: React.FC<ExtendedHeaderBarProps> = ({
   const user = useUserStore((state) => state.user);
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const { account, connected } = useWallet();
+  const { signedAccountId, wallet } = useContext(NearContext);
 
   useEffect(() => {
     setIsMounted(true);
-    console.log("account", account)
-  }, [connected]);
+    console.log("account", signedAccountId);
+  }, [signedAccountId]);
 
   const isAIChat = /^\/ai\/[^/]+\/chat/.test(router.asPath);
   const isMyPage = router.asPath === "/mypage" || isAIChat;
