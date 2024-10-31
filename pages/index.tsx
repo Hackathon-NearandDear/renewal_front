@@ -6,6 +6,11 @@ import { WalletSelector } from "@/components/wallet/WalletSelector";
 export default function Landing() {
   const { clearUser } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
+  const { user, wallet } = useUserStore();
+  useEffect(() => {
+    console.log("Current user:", user);
+    console.log("Current wallet:", wallet);
+  }, [user, wallet]);
 
   useEffect(() => {
     if (!isInitialized) {
