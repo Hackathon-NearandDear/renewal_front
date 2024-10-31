@@ -1,13 +1,11 @@
-import {
-  ArrowRightIcon,
-} from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "next/router";
 import { fetchUser, fetchUserExists } from "@/utils/api/user";
 import { User } from "@/utils/interface";
-import { NearContext } from "./Near";
+import { CONTRACT_ADDRESS, NearContext } from "./Near";
 
 export function WalletSelector() {
   const { signedAccountId, wallet } = useContext(NearContext);
@@ -84,7 +82,7 @@ export function WalletSelector() {
         setIsLoading(false);
       }
     },
-    [setUser, toast],
+    [setUser, toast]
   );
 
   useEffect(() => {

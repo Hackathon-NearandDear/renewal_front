@@ -1,12 +1,13 @@
 // pages/my-balance.tsx
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { useUserStore } from "@/store/userStore";
 import AIBalanceCard from "@/components/mybalance/AIBalanceCard";
 import BalanceOverview from "@/components/mybalance/BalanceOverview";
 import { useLoadAIModels } from "@/utils/hooks/useLoadAIModels";
-import { useAptosCall } from "@/utils/hooks/useAptos";
 import { CardData } from "@/utils/interface";
+import { NearContext } from "@/components/wallet/Near";
+import { CONTRACT_ADDRESS } from "@/components/wallet/Near";
 const MyBalancePage = () => {
   const { user } = useUserStore();
   // 'myAI' 모드로 useLoadAIModels 사용
@@ -21,19 +22,22 @@ const MyBalancePage = () => {
   const [trial, setTrial] = useState(0);
   const [balance, setBalance] = useState(0);
   const [aiWithEarnings, setAiWithEarnings] = useState<CardData[]>([]);
-
-  const { viewTransaction } = useAptosCall();
+  const { signedAccountId, wallet } = useContext(NearContext);
 
   const getView = async () => {
-    const trial = await viewTransaction("get_free_trial_count", [
-      user?.user_address,
-    ]);
+    const trial = await wallet?.viewMethod({
+      contractId: CONTRACT_ADDRESS,
+      method: "get_free_trial_count",
+      args: { address: signedAccountId },
+    });
     if (typeof trial === "string") {
       setTrial(Number(trial));
     }
-    const bal = await viewTransaction("get_consumer_balance", [
-      user?.user_address,
-    ]);
+    const bal = await wallet?.viewMethod({
+      contractId: CONTRACT_ADDRESS,
+      method: "get_consumer_balance",
+      args: { address: signedAccountId },
+    });
     if (typeof bal === "string") {
       setBalance(Number(bal));
     }
@@ -70,10 +74,11 @@ const MyBalancePage = () => {
 
     const updatedAIs = await Promise.all(
       myAIs.map(async (ai) => {
-        const res = await viewTransaction("get_ai_collecting_rewards", [
-          user?.user_address,
-          ai.id,
-        ]);
+        const res = await wallet?.viewMethod({
+          contractId: CONTRACT_ADDRESS,
+          method: "get_ai_collecting_rewards",
+          args: { address: user?.user_address, ai_id: ai.id },
+        });
 
         const earnings = typeof res === "string" ? Number(res) : 0;
 

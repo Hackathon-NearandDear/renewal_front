@@ -20,6 +20,7 @@ import { setupEthereumWallets } from "@near-wallet-selector/ethereum-wallets";
 
 const THIRTY_TGAS = "30000000000000";
 const NO_DEPOSIT = "0";
+export const CONTRACT_ADDRESS = "";
 
 interface NearContext {
   wallet?: Wallet;
@@ -30,7 +31,10 @@ export class Wallet {
   createAccessKeyFor: undefined;
   networkId: "mainnet" | "testnet";
   selector: any;
-  constructor({ networkId = "testnet" as "mainnet" | "testnet", createAccessKeyFor = undefined }) {
+  constructor({
+    networkId = "testnet" as "mainnet" | "testnet",
+    createAccessKeyFor = undefined,
+  }) {
     this.createAccessKeyFor = createAccessKeyFor;
     this.networkId = networkId;
   }
@@ -44,7 +48,6 @@ export class Wallet {
         setupLedger(),
         setupMeteorWallet(),
         setupSender(),
-
       ],
     });
 
@@ -54,9 +57,9 @@ export class Wallet {
       ? walletSelector.store.getState().accounts[0].accountId
       : "";
 
-    walletSelector.store.observable.subscribe((state: { accounts: any[]; }) => {
+    walletSelector.store.observable.subscribe((state: { accounts: any[] }) => {
       const signedAccount = state?.accounts.find(
-        (account: { active: any; }) => account.active
+        (account: { active: any }) => account.active
       )?.accountId;
       accountChangeHook(signedAccount || "");
     });
@@ -143,7 +146,7 @@ export class Wallet {
       account_id: accountId,
       finality: "final",
     });
-    return account
+    return account;
   };
 
   signAndSendTransactions = async ({

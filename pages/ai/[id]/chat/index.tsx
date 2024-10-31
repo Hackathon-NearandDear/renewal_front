@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useContext } from "react";
 import { useRouter } from "next/router";
 import { Message, ChatResponse } from "@/utils/interface";
 import { createChat, fetchChatHistory, sendMessage } from "@/utils/api/chat";
@@ -6,9 +6,8 @@ import { Send } from "lucide-react";
 import Logo from "@/assets/logo_apptos.svg";
 import { useUserStore } from "@/store/userStore";
 import { fetchAIDetails } from "@/utils/api/ai";
-import { useAptosCall } from "@/utils/hooks/useAptos";
 import Modal from "@/components/chat/AlertModal";
-
+import { CONTRACT_ADDRESS, NearContext } from "@/components/wallet/Near";
 const AIChat = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -24,19 +23,22 @@ const AIChat = () => {
     title: "",
     message: "",
   });
-
-  const { viewTransaction } = useAptosCall();
+  const { signedAccountId, wallet } = useContext(NearContext);
 
   const getView = async () => {
-    const trial = await viewTransaction("get_free_trial_count", [
-      user?.user_address,
-    ]);
+    const trial = await wallet?.viewMethod({
+      contractId: CONTRACT_ADDRESS,
+      method: "get_free_trial_count",
+      args: { address: signedAccountId },
+    });
     if (typeof trial === "string") {
       setTrial(Number(trial));
     }
-    const bal = await viewTransaction("get_consumer_balance", [
-      user?.user_address,
-    ]);
+    const bal = await wallet?.viewMethod({
+      contractId: CONTRACT_ADDRESS,
+      method: "get_consumer_balance",
+      args: { address: signedAccountId },
+    });
     if (typeof bal === "string") {
       setBalance(Number(bal));
     }

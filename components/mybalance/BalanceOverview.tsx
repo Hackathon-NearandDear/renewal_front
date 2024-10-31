@@ -1,10 +1,11 @@
 // components/BalanceOverview.tsx
 import { useUserStore } from "@/store/userStore";
 import { requsetFaucet } from "@/utils/api/user";
-import { useAptosCall } from "@/utils/hooks/useAptos";
 import { Plus } from "lucide-react";
 import { decimalconverter } from "@/utils/lib/decimalconverter";
-
+import { useContext } from "react";
+import { NearContext } from "../wallet/Near";
+import { CONTRACT_ADDRESS } from "../wallet/Near";
 interface BalanceOverviewProps {
   totalBalance: number;
   totalEarnings: number;
@@ -18,20 +19,26 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
   trial,
   getView,
 }) => {
+  const { signedAccountId, wallet } = useContext(NearContext);
+
   const { user } = useUserStore();
-  const { executeTransaction } = useAptosCall();
   const handleRequest = async () => {
     if (user?.user_address) {
-      const result = await executeTransaction("request_faucet", []);
+      const result = await wallet?.callMethod({
+        contractId: CONTRACT_ADDRESS,
+        method: "request_faucet",
+      });
       console.log(result);
     }
   };
 
   const handleCharge = async () => {
     if (user?.user_address) {
-      const result = await executeTransaction("recharge_consumer_balance", [
-        1000000,
-      ]);
+      const result = await wallet?.callMethod({
+        contractId: CONTRACT_ADDRESS,
+        method: "recharge_consumer_balance",
+        args: { balance: 1000000 },
+      });
       console.log(result);
     }
     getView();

@@ -1,3 +1,3 @@
-export function decimalconverter(aptos: number) {
-  return (aptos / 1000000).toFixed(3);
+export function decimalconverter(near: number) {
+  return (near / 1000000).toFixed(3);
 }

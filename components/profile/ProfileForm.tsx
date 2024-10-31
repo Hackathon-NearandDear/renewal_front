@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { UserRound } from "lucide-react";
 import Image from "next/image";
 import GenderSelect from "@/components/profile/GenderSelect";
 import CountrySelect from "@/components/profile/CountrySelect";
 import { useRouter } from "next/router";
 import { useUserStore } from "@/store/userStore";
-
 import { fetchUserExists, registerUser, updateUser } from "@/utils/api/user";
 import { User } from "@/utils/interface";
+import { NearContext } from "../wallet/Near";
+import { CONTRACT_ADDRESS } from "../wallet/Near";
 
 interface ProfileFormProps {
   mode: "setMode" | "editMode";
@@ -20,13 +21,15 @@ const profileImages = [
 ];
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
+  const { signedAccountId, wallet } = useContext(NearContext);
+
   const { user, setUser } = useUserStore();
   const [nickname, setNickname] = useState<string>(user ? user?.nickname : "");
   const [gender, setGender] = useState<string>(user ? user?.gender! : "");
   const [country, setCountry] = useState<string>(user ? user.country! : "");
   const [interest, setInterest] = useState<string>(user ? user?.interest! : "");
   const [profileImageUrl, setProfileImageUrl] = useState<string>(
-    user ? user?.profile_image_url! : "",
+    user ? user?.profile_image_url! : ""
   );
 
   const [error, setError] = useState("");
@@ -36,22 +39,36 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
 
   const registerUserProfile = async (userData: User) => {
     try {
-      // const isUserExistInBlockchain = await viewTransaction("exists_creator_at", [userData.user_address])
-      // const res = (async() => {
-      //   if (isUserExistInBlockchain) {
-      //     const res = await executeTransaction("reset_user", []);
-      //     return res
-      //   } else {
-      //     const res = await executeTransaction("register_user", []);
-      //     return res
-      //   }
-      // })();
+      const isUserExistInBlockchain = await wallet?.viewMethod({
+        contractId: CONTRACT_ADDRESS,
+        method: "exists_creator_at",
+      });
+      const res = (async () => {
+        if (isUserExistInBlockchain) {
+          const res = await wallet?.callMethod({
+            contractId: CONTRACT_ADDRESS,
+            method: "reset_user",
+          });
+          return res;
+        } else {
+          const res = await wallet?.callMethod({
+            contractId: CONTRACT_ADDRESS,
+            method: "register_user",
+          });
+          return res;
+        }
+      })();
 
-      // const result = await res
-      // if (result) {
-      const userExists = await fetchUserExists(userData.user_address);
-      if (userExists) {
-        const result = await updateUser(userData);
+      const result = await res;
+      if (result) {
+        const userExists = await fetchUserExists(userData.user_address);
+        if (userExists) {
+          const result = await updateUser(userData);
+        } else {
+          const result = await registerUser(userData);
+        }
+        setUser(userData);
+        router.push("/explore");
       } else {
         const result = await registerUser(userData);
       }
@@ -77,7 +94,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!user || !user.user_address) {
+    if (!signedAccountId) {
       window.alert("Wallet address is not available");
       router.push("/");
       return;
@@ -85,7 +102,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
 
     try {
       const userData: User = {
-        user_address: user?.user_address!,
+        user_address: signedAccountId,
         nickname: nickname, // Add nickname if needed
         profile_image_url: profileImageUrl,
         gender: gender,
@@ -114,7 +131,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
       {ProfileSelectionSection(
         profileImages,
         profileImageUrl,
-        setProfileImageUrl,
+        setProfileImageUrl
       )}
 
       {NicknameSection(nickname, setNickname)}
@@ -167,7 +184,7 @@ const ProfileImage = (profileImageUrl: string) => {
 const ProfileSelectionSection = (
   profileImages: any,
   profileImageUrl: string,
-  setProfileImageUrl: any,
+  setProfileImageUrl: any
 ) => {
   return (
     <div className="flex justify-center space-x-4 mb-8">
