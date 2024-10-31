@@ -70,9 +70,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
         setUser(userData);
         router.push("/explore");
       } else {
-        window.alert("Fail to Register User");
+        const result = await registerUser(userData);
       }
+      setUser(userData);
+      router.push("/explore");
     } catch (error) {
+      window.alert("Fail to Register User");
       throw error;
     }
   };
@@ -150,7 +153,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
           {isLoading
             ? "Loading..."
             : mode === "setMode"
-            ? "Create Account"
+            ? "Create user"
             : "Update Profile"}
         </button>
       </div>
