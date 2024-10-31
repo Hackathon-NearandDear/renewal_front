@@ -1,3 +1,4 @@
+// Near.ts
 import { createContext } from "react";
 
 // near api js
@@ -20,27 +21,21 @@ import { setupEthereumWallets } from "@near-wallet-selector/ethereum-wallets";
 const THIRTY_TGAS = "30000000000000";
 const NO_DEPOSIT = "0";
 
+interface NearContext {
+  wallet?: Wallet;
+  signedAccountId: string;
+}
+
 export class Wallet {
-  /**
-   * @constructor
-   * @param {Object} options - the options for the wallet
-   * @param {string} options.networkId - the network id to connect to
-   * @param {string} options.createAccessKeyFor - the contract to create an access key for
-   * @example
-   * const wallet = new Wallet({ networkId: 'testnet', createAccessKeyFor: 'contractId' });
-   * wallet.startUp((signedAccountId) => console.log(signedAccountId));
-   */
-  constructor({ networkId = "testnet", createAccessKeyFor = undefined }) {
+  createAccessKeyFor: undefined;
+  networkId: "mainnet" | "testnet";
+  selector: any;
+  constructor({ networkId = "testnet" as "mainnet" | "testnet", createAccessKeyFor = undefined }) {
     this.createAccessKeyFor = createAccessKeyFor;
     this.networkId = networkId;
   }
 
-  /**
-   * To be called when the website loads
-   * @param {Function} accountChangeHook - a function that is called when the user signs in or out#
-   * @returns {Promise<string>} - the accountId of the signed-in user
-   */
-  startUp = async (accountChangeHook) => {
+  startUp = async (accountChangeHook: (signedAccountId: string) => void) => {
     this.selector = setupWalletSelector({
       network: this.networkId,
       modules: [
@@ -49,11 +44,7 @@ export class Wallet {
         setupLedger(),
         setupMeteorWallet(),
         setupSender(),
-        setupEthereumWallets({
-          wagmiConfig,
-          web3Modal,
-          alwaysOnboardDuringSignIn: true,
-        }),
+
       ],
     });
 
@@ -63,9 +54,9 @@ export class Wallet {
       ? walletSelector.store.getState().accounts[0].accountId
       : "";
 
-    walletSelector.store.observable.subscribe(async (state) => {
+    walletSelector.store.observable.subscribe((state: { accounts: any[]; }) => {
       const signedAccount = state?.accounts.find(
-        (account) => account.active
+        (account: { active: any; }) => account.active
       )?.accountId;
       accountChangeHook(signedAccount || "");
     });
@@ -73,33 +64,27 @@ export class Wallet {
     return accountId;
   };
 
-  /**
-   * Displays a modal to login the user
-   */
   signIn = async () => {
     const modal = setupModal(await this.selector, {
-      contractId: this.createAccessKeyFor,
+      contractId: this.createAccessKeyFor || "",
     });
     modal.show();
   };
 
-  /**
-   * Logout the user
-   */
   signOut = async () => {
     const selectedWallet = await (await this.selector).wallet();
     selectedWallet.signOut();
   };
 
-  /**
-   * Makes a read-only call to a contract
-   * @param {Object} options - the options for the call
-   * @param {string} options.contractId - the contract's account id
-   * @param {string} options.method - the method to call
-   * @param {Object} options.args - the arguments to pass to the method
-   * @returns {Promise<JSON.value>} - the result of the method call
-   */
-  viewMethod = async ({ contractId, method, args = {} }) => {
+  viewMethod = async ({
+    contractId,
+    method,
+    args = {},
+  }: {
+    contractId: string;
+    method: string;
+    args?: object;
+  }) => {
     const url = `https://rpc.${this.networkId}.near.org`;
     const provider = new providers.JsonRpcProvider({ url });
 
@@ -110,123 +95,81 @@ export class Wallet {
       args_base64: Buffer.from(JSON.stringify(args)).toString("base64"),
       finality: "optimistic",
     });
-    return JSON.parse(Buffer.from(res.result).toString());
+    return JSON.parse(Buffer.from((res as any).result).toString());
   };
 
-  /**
-   * Makes a call to a contract
-   * @param {Object} options - the options for the call
-   * @param {string} options.contractId - the contract's account id
-   * @param {string} options.method - the method to call
-   * @param {Object} options.args - the arguments to pass to the method
-   * @param {string} options.gas - the amount of gas to use
-   * @param {string} options.deposit - the amount of yoctoNEAR to deposit
-   * @returns {Promise<Transaction>} - the resulting transaction
-   */
   callMethod = async ({
     contractId,
     method,
     args = {},
     gas = THIRTY_TGAS,
     deposit = NO_DEPOSIT,
+  }: {
+    contractId: string;
+    method: string;
+    args?: object;
+    gas?: string;
+    deposit?: string;
   }) => {
-    // Sign a transaction with the "FunctionCall" action
     const selectedWallet = await (await this.selector).wallet();
     const outcome = await selectedWallet.signAndSendTransaction({
       receiverId: contractId,
       actions: [
         {
           type: "FunctionCall",
-          params: {
-            methodName: method,
-            args,
-            gas,
-            deposit,
-          },
+          params: { methodName: method, args, gas, deposit },
         },
       ],
     });
-
     return providers.getTransactionLastResult(outcome);
   };
 
-  /**
-   * Makes a call to a contract
-   * @param {string} txhash - the transaction hash
-   * @returns {Promise<JSON.value>} - the result of the transaction
-   */
-  getTransactionResult = async (txhash) => {
+  getTransactionResult = async (txhash: string) => {
     const walletSelector = await this.selector;
     const { network } = walletSelector.options;
     const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 
-    // Retrieve transaction result from the network
     const transaction = await provider.txStatus(txhash, "unnused");
     return providers.getTransactionLastResult(transaction);
   };
 
-  /**
-   * Gets the balance of an account
-   * @param {string} accountId - the account id to get the balance of
-   * @returns {Promise<number>} - the balance of the account
-   *
-   */
-  getBalance = async (accountId) => {
+  getBalance = async (accountId: string) => {
     const walletSelector = await this.selector;
     const { network } = walletSelector.options;
     const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 
-    // Retrieve account state from the network
     const account = await provider.query({
       request_type: "view_account",
       account_id: accountId,
       finality: "final",
     });
-    // return amount on NEAR
-    return account.amount
-      ? Number(utils.format.formatNearAmount(account.amount))
-      : 0;
+    return account
   };
 
-  /**
-   * Signs and sends transactions
-   * @param {Object[]} transactions - the transactions to sign and send
-   * @returns {Promise<Transaction[]>} - the resulting transactions
-   *
-   */
-  signAndSendTransactions = async ({ transactions }) => {
+  signAndSendTransactions = async ({
+    transactions,
+  }: {
+    transactions: object[];
+  }) => {
     const selectedWallet = await (await this.selector).wallet();
     return selectedWallet.signAndSendTransactions({ transactions });
   };
 
-  /**
-   *
-   * @param {string} accountId
-   * @returns {Promise<Object[]>} - the access keys for the
-   */
-  getAccessKeys = async (accountId) => {
+  getAccessKeys = async (accountId: string) => {
     const walletSelector = await this.selector;
     const { network } = walletSelector.options;
     const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
 
-    // Retrieve account state from the network
     const keys = await provider.query({
       request_type: "view_access_key_list",
       account_id: accountId,
       finality: "final",
     });
-    return keys.keys;
+    return keys;
   };
 }
 
-/**
- * @typedef NearContext
- * @property {import('./wallets/near').Wallet} wallet Current wallet
- * @property {string} signedAccountId The AccountId of the signed user
- */
-
-/** @type {import ('react').Context<NearContext>} */
-export const NearContext = createContext({
+export const NearContext = createContext<NearContext>({
   wallet: undefined,
   signedAccountId: "",
 });

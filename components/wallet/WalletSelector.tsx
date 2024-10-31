@@ -120,8 +120,11 @@ export function WalletSelector() {
     <button
       className="w-full bg-[#1F222A] font-semibold py-4 border rounded-full mb-8 hover:bg-opacity-70 transition duration-300 ease-in-out flex items-center justify-center"
       onClick={() => {
-        wallet.signIn();
-        console.log(1);
+        if (wallet) {
+          wallet.signIn();
+        } else {
+          console.error("Wallet is undefined");
+        }
       }}
     >
       <div className="flex items-center justify-center w-full">Log in</div>
