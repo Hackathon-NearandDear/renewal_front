@@ -41,20 +41,17 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
     try {
       const isUserExistInBlockchain = await wallet?.viewMethod({
         contractId: CONTRACT_ADDRESS,
-        method: "exists_creator_at",
+        method: "get_creator",
+        args: { userAccountId: signedAccountId },
       });
+      console.log(isUserExistInBlockchain);
       const res = (async () => {
-        if (isUserExistInBlockchain) {
-          const res = await wallet?.callMethod({
-            contractId: CONTRACT_ADDRESS,
-            method: "reset_user",
-          });
-          return res;
-        } else {
+        if (!isUserExistInBlockchain) {
           const res = await wallet?.callMethod({
             contractId: CONTRACT_ADDRESS,
             method: "register_user",
           });
+          console.log(res);
           return res;
         }
       })();
@@ -66,7 +63,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ mode }) => {
         if (userExists) {
           const result = await updateUser(userData);
         } else {
-          console.log("GERE");
           const result = await registerUser(userData);
         }
         setUser(userData);

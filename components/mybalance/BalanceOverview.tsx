@@ -27,6 +27,7 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
       const result = await wallet?.callMethod({
         contractId: CONTRACT_ADDRESS,
         method: "request_faucet",
+        args: { userAccountId: signedAccountId },
       });
       console.log(result);
     }
@@ -37,7 +38,7 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
       const result = await wallet?.callMethod({
         contractId: CONTRACT_ADDRESS,
         method: "recharge_consumer_balance",
-        args: { balance: 1000000 },
+        args: { amount: 1000000 },
       });
       console.log(result);
     }
@@ -50,14 +51,14 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
         <div className="flex-1 pr-2">
           <p className="text-[#B9F0DE] text-sm mb-1">My Balance</p>
           <p className="text-white text-2xl font-bold">
-            {decimalconverter(totalBalance)} mAPT
+            {decimalconverter(totalBalance)} mNEAR
           </p>
         </div>
         <div className="w-px bg-[#B9F0DE] self-stretch mx-2"></div>
         <div className="flex-1 pl-2">
           <p className="text-[#B9F0DE] text-sm mb-1">Earnings</p>
           <p className="text-white text-2xl font-bold">
-            {decimalconverter(totalEarnings)} mAPT
+            {decimalconverter(totalEarnings)} mNEAR
           </p>
         </div>
       </div>
@@ -67,7 +68,7 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
             className="w-1/2 p-2  rounded-full flex items-center justify-center bg-[#2A2D36] hover:bg-primary-700"
             onClick={handleRequest}
           >
-            Requst Faucet
+            Request Faucet
           </button>
           <button
             className="w-1/2 p-2 rounded-full flex items-center justify-center bg-[#2A2D36] hover:bg-primary-700"
@@ -80,7 +81,7 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
         <p>Free Trial : {trial} Left</p>
       )}
       <p className="text-[12px] text-end mt-3 tracking-wide">
-        1 mAPT = 0.01 APT
+        1 mNEAR = 0.01 NEAR
       </p>
     </div>
   );

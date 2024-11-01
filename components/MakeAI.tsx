@@ -78,8 +78,8 @@ const CreateCustomAISheet: React.FC<CreateCustomAISheetProps> = ({
 
       const isAIAlreadyRegisterInBlockchain = await wallet?.viewMethod({
         contractId: CONTRACT_ADDRESS,
-        method: "contain_ai",
-        args: { address: signedAccountId, ai_id: ai_id },
+        method: "get_ai",
+        args: { ai_id: ai_id },
       });
 
       const res: any = (async () => {
@@ -87,7 +87,7 @@ const CreateCustomAISheet: React.FC<CreateCustomAISheetProps> = ({
           const res: any = await wallet?.callMethod({
             contractId: CONTRACT_ADDRESS,
             method: "update_ai",
-            args: { ai_id: ai_id, data: aiData.rag_contents },
+            args: { aiId: ai_id, ragPrompt: aiData.rag_contents },
           });
           console.log("res1", res);
           return res;
@@ -95,7 +95,7 @@ const CreateCustomAISheet: React.FC<CreateCustomAISheetProps> = ({
           const res: any = await wallet?.callMethod({
             contractId: CONTRACT_ADDRESS,
             method: "register_ai",
-            args: { ai_id: ai_id, data: aiData.rag_contents },
+            args: { aiId: ai_id, ragPrompt: aiData.rag_contents },
           });
           console.log("res1", res);
           return res;
@@ -103,11 +103,11 @@ const CreateCustomAISheet: React.FC<CreateCustomAISheetProps> = ({
       })();
 
       const result = await res;
-      if (result) {
+      if (result[0]) {
         const createData = {
           ...aiData,
           rag_comments: "Create AI",
-          tx_hash: result.hash,
+          tx_hash: result[1].transaction.hash,
         };
         await handleCreate(createData);
         setLoading(false);

@@ -29,19 +29,15 @@ const AIChat = () => {
     const trial = await wallet?.viewMethod({
       contractId: CONTRACT_ADDRESS,
       method: "get_free_trial_count",
-      args: { address: signedAccountId },
+      args: { userAccountId: signedAccountId },
     });
-    if (typeof trial === "string") {
-      setTrial(Number(trial));
-    }
+    setTrial(Number(trial));
     const bal = await wallet?.viewMethod({
       contractId: CONTRACT_ADDRESS,
       method: "get_consumer_balance",
-      args: { address: signedAccountId },
+      args: { userAccountId: signedAccountId },
     });
-    if (typeof bal === "string") {
-      setBalance(Number(bal));
-    }
+    setBalance(Number(bal));
   };
 
   useEffect(() => {

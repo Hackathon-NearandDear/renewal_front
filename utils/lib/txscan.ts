@@ -1,4 +1,4 @@
 export function txScanURL(txHash: string) {
-  const baseUrl = "https://legacy.explorer.near.org/";
-  return baseUrl + txHash + "?network=testnet";
+  const baseUrl = "https://testnet.nearblocks.io/txns/";
+  return baseUrl + txHash;
 }

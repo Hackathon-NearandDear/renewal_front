@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children, title }) => {
   return (
     <div className="max-w-[600px] mx-auto h-screen flex justify-center">
       <Head>
-        <title>{title} | ApptoS</title>
+        <title>{title} | Near N Dear</title>
         <meta name="description" content="AI Chat Application" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

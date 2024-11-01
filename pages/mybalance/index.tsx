@@ -28,19 +28,16 @@ const MyBalancePage = () => {
     const trial = await wallet?.viewMethod({
       contractId: CONTRACT_ADDRESS,
       method: "get_free_trial_count",
-      args: { address: signedAccountId },
+      args: { userAccountId: signedAccountId },
     });
-    if (typeof trial === "string") {
-      setTrial(Number(trial));
-    }
+    setTrial(Number(trial));
+
     const bal = await wallet?.viewMethod({
       contractId: CONTRACT_ADDRESS,
       method: "get_consumer_balance",
-      args: { address: signedAccountId },
+      args: { userAccountId: signedAccountId },
     });
-    if (typeof bal === "string") {
-      setBalance(Number(bal));
-    }
+    setBalance(Number(bal));
   };
 
   // 페이지가 로드될 때 AI 모델들을 불러오는 함수 호출
@@ -77,7 +74,7 @@ const MyBalancePage = () => {
         const res = await wallet?.viewMethod({
           contractId: CONTRACT_ADDRESS,
           method: "get_ai_collecting_rewards",
-          args: { address: user?.user_address, ai_id: ai.id },
+          args: { userAccountId: user?.user_address, ai_id: ai.id },
         });
 
         const earnings = typeof res === "string" ? Number(res) : 0;

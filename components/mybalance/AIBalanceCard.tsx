@@ -90,7 +90,7 @@ const AIBalanceCard: React.FC<AIBalanceCardProps> = ({
         <div className="flex-1 flex flex-col items-center justify-center">
           <p className="text-sm text-gray-500">Earnings</p>
           <p className="text-lg text-white">
-            {earnings ? decimalconverter(earnings) : 0} mAPT
+            {earnings ? decimalconverter(earnings) : 0} mNEAR
           </p>
         </div>
       </div>
