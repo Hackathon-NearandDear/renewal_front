@@ -20,7 +20,7 @@ import { setupEthereumWallets } from "@near-wallet-selector/ethereum-wallets";
 
 const THIRTY_TGAS = "30000000000000";
 const NO_DEPOSIT = "0";
-export const CONTRACT_ADDRESS = "neardearrenew4.testnet";
+export const CONTRACT_ADDRESS = "neardearrenew6.testnet";
 
 interface NearContext {
   wallet?: Wallet;

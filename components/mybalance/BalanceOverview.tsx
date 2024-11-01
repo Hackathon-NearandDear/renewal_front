@@ -27,7 +27,6 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
       const result = await wallet?.callMethod({
         contractId: CONTRACT_ADDRESS,
         method: "request_faucet",
-        args: { userAccountId: signedAccountId },
       });
       console.log(result);
     }
@@ -74,7 +73,7 @@ const BalanceOverview: React.FC<BalanceOverviewProps> = ({
             className="w-1/2 p-2 rounded-full flex items-center justify-center bg-[#2A2D36] hover:bg-primary-700"
             onClick={handleCharge}
           >
-            Charge APT
+            Charge NEAR
           </button>
         </div>
       ) : (

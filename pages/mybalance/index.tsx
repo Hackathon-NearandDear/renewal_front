@@ -74,10 +74,10 @@ const MyBalancePage = () => {
         const res = await wallet?.viewMethod({
           contractId: CONTRACT_ADDRESS,
           method: "get_ai_collecting_rewards",
-          args: { userAccountId: user?.user_address, ai_id: ai.id },
+          args: { userAccountId: signedAccountId, ai_id: ai.id },
         });
 
-        const earnings = typeof res === "string" ? Number(res) : 0;
+        const earnings = Number(res);
 
         return {
           ...ai,
@@ -88,6 +88,8 @@ const MyBalancePage = () => {
 
     setAiWithEarnings(updatedAIs); // AI 데이터를 earnings와 함께 업데이트
   };
+
+  console.log(aiWithEarnings);
 
   const totalEarnings =
     aiWithEarnings?.reduce((sum, ai) => sum + ai.earnings, 0) || 0;
